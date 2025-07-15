@@ -1,0 +1,138 @@
+version: 2
+
+models:
+  - name: stg_customer
+    description: Cleaned and standardized customer data. Each record represents a unique customer in the YouGrow platform.
+    columns:
+      - name: customer_id
+        description: Unique identifier for each customer
+        tests:
+          - unique
+          - not_null
+      - name: name
+        description: Full name of the customer
+      - name: email
+        description: Email address of the customer
+        tests:
+          - not_null
+      - name: state
+        description: State/province where the customer is located
+      - name: country
+        description: Country where the customer is located
+      - name: created_at
+        description: Timestamp when the customer account was created
+        tests:
+          - not_null
+
+  - name: stg_order_line
+    description: Cleaned order line items data. Each record represents a single product within an order.
+    columns:
+      - name: id
+        description: Unique identifier for each order line
+        tests:
+          - unique
+          - not_null
+      - name: order_id
+        description: Foreign key to the order this line item belongs to
+        tests:
+          - not_null
+          - relationships:
+              to: ref('stg_order')
+              field: order_id
+      - name: product_id
+        description: Foreign key to the product being ordered
+        tests:
+          - not_null
+          - relationships:
+              to: ref('stg_product')
+              field: product_id
+      - name: quantity
+        description: Number of units ordered for this product
+        tests:
+          - not_null
+          - dbt_utils.expression_is_true:
+              expression: '>= 0'
+      - name: total_price
+        description: Total price for this line item (quantity * unit price)
+        tests:
+          - not_null
+          - dbt_utils.expression_is_true:
+              expression: '>= 0'
+
+  - name: stg_order
+    description: Cleaned order header data. Each record represents a unique order placed by a customer.
+    tests:
+      - test_order_totals_match_lines
+    columns:
+      - name: order_id
+        description: Unique identifier for each order
+        tests:
+          - unique
+          - not_null
+      - name: customer_id
+        description: Foreign key to the customer who placed the order
+        tests:
+          - not_null
+          - relationships:
+              to: ref('stg_customer')
+              field: customer_id
+      - name: currency
+        description: Currency code for the order (e.g., USD)
+        tests:
+          - not_null
+      - name: total_price
+        description: Total price of the order including all line items
+        tests:
+          - not_null
+          - dbt_utils.expression_is_true:
+              expression: '>= 0'
+      - name: created_at
+        description: Timestamp when the order was created
+        tests:
+          - not_null
+      - name: refunded_at
+        description: Timestamp when the order was refunded, if applicable. Null if not refunded.
+
+  - name: stg_product
+    description: Cleaned product data. Each record represents a unique product available for sale.
+    columns:
+      - name: product_id
+        description: Unique identifier for each product
+        tests:
+          - unique
+          - not_null
+      - name: product_name
+        description: Name of the product
+        tests:
+          - not_null
+      - name: category_id
+        description: Foreign key to the product category
+        tests:
+          - not_null
+      - name: price
+        description: Current selling price of the product
+        tests:
+          - not_null
+          - dbt_utils.expression_is_true:
+              expression: '>= 0'
+      - name: cost
+        description: Cost of goods sold (COGS) for the product
+        tests:
+          - not_null
+          - dbt_utils.expression_is_true:
+              expression: '>= 0'
+      - name: vendor_id
+        description: Foreign key to the vendor/supplier of the product
+        tests:
+          - not_null
+      - name: created_at
+        description: Timestamp when the product was added to the catalog
+        tests:
+          - not_null
+
+tests:
+  - name: test_order_totals_match_lines
+    description: >
+      Ensures that the total_price in stg_order matches the sum of total_price
+      in stg_order_line for each order_id. This test helps identify any
+      discrepancies between order headers and their line items. 
