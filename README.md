@@ -43,8 +43,48 @@ In Looker, we can set up two main views:
     - Retention rate: calculated as the sum of all `is_active` customers in a cohort divided by the total number of customers in that cohort
     - Customer Lifetime Value (CLV), defined as:
       - average purchase value (excluding refunds): average `total_revenue`
-      - × purchase frequency (total orders divided by total customers, including refunds): `total_orders` / total customers in cohort 
+      - × purchase frequency◊ (total orders divided by total customers, including refunds): `total_orders` / total customers in cohort 
       - × average customer lifespan (average cumulative active months): `cumulative_active_months`
 - The `dim_customers` view, which provides additional customer attributes for slicing and filtering.
 
-With these views, Beth can easily track retention and CLV by cohort each month, and also break down the results by any of the main customer dimensions from `dim_customers`, such as name, email, state, country, gender, and signup date.
+With these views, Beth can easily track retention and CLV by cohort each month, and also break down the results by any of the main customer dimensions from `dim_customers`, such as name, email, state, country, gender, and signup date as well as first purchase attributes such as first purchase value, first purchase basket size
+
+(If we don’t want to use Looker, we can also define these measures in a semantic layer and use them in another tool, such as Tableau.)
+
+The result for a basic segmentation by cohort month can be found below
+Cohort Month | Activity Month | Months Since Cohort | Total Customers in Cohort | Active Customers | Retention Rate | Avg Purchase Value | Purchase Frequency | Avg Customer Lifespan | CLV
+--- | --- | --- | --- | --- | --- | --- | --- | --- | ---
+2021-01-01 | 2021-01-01 | 0 | 3 | 3 | 100.0% | $57.13 | 1.00 | 1.00 | $57.13
+2021-01-01 | 2021-02-01 | 1 | 3 | 1 | 33.3% | $104.22 | 0.33 | 1.33 | $46.32
+2021-01-01 | 2021-03-01 | 2 | 3 | 1 | 33.3% | $134.60 | 0.33 | 1.67 | $74.78
+2021-02-01 | 2021-02-01 | 0 | 3 | 3 | 100.0% | $73.33 | 1.00 | 1.00 | $73.33
+2021-02-01 | 2021-03-01 | 1 | 3 | 2 | 66.7% | $40.68 | 0.67 | 1.67 | $45.20
+2021-03-01 | 2021-03-01 | 0 | 4 | 4 | 100.0% | $79.81 | 1.00 | 1.00 | $79.81
+
+## Question 3:
+With the introduction of a subscription model, we should first create a new staging model to handle subscription-specific data, including:
+- subscription id
+- customer id
+- subscription price
+- start and end dates
+
+For updates to existing models:
+- In `fct_monthly_kpis`, we should add:
+    - Number of active subscribers
+    - Subscription revenue (MRR)
+    - For existing metrics, ensure they only reflect non-subscription components.
+- In `fct_customer_monthly_cohort`, we should include:
+    - Indicator for whether the customer’s membership is active in a given month
+    - Indicator for whether the customer churned that month
+    - Current plan and plan price for each month
+- In `dim_customers`, we should add:
+    - Flag to indicate if the customer has a subscription
+    - Current subscription plan
+    - Count of different subscription plans
+    - Subscription start date
+
+With these changes, we’ll be able to:
+- Segment between subscription and non-subscription users
+- Track subscription rate and churn rate (and segment by different properties)
+- Identify customer segments Beth should focus on
+- Measure subscription retention rate
