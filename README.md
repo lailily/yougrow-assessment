@@ -1,4 +1,4 @@
-# YouGrowth - Analytics Engineer Assessment
+# YouGrow - Analytics Engineer Assessment
 
 ## Question 1:
 To help Beth track her key metrics—Gross Merchandise Value (GMV), Average Order Value, Average Basket Size, and Active Customers—I've created a central model called `fct_monthly_kpis`. This model aggregates these KPIs on a monthly basis, making it easy for Beth to monitor YouGrow’s performance over time.
