@@ -1,7 +1,7 @@
 version: 2
 
 models:
-  - name: stg_customer
+  - name: stg_customers
     description: Cleaned and standardized customer data. Each record represents a unique customer in the YouGrow platform.
     columns:
       - name: customer_id
@@ -24,10 +24,10 @@ models:
         tests:
           - not_null
 
-  - name: stg_order_line
+  - name: stg_order_lines
     description: Cleaned order line items data. Each record represents a single product within an order.
     columns:
-      - name: id
+      - name: order_line_id
         description: Unique identifier for each order line
         tests:
           - unique
@@ -37,14 +37,14 @@ models:
         tests:
           - not_null
           - relationships:
-              to: ref('stg_order')
+              to: ref('stg_orders')
               field: order_id
       - name: product_id
         description: Foreign key to the product being ordered
         tests:
           - not_null
           - relationships:
-              to: ref('stg_product')
+              to: ref('stg_products')
               field: product_id
       - name: quantity
         description: Number of units ordered for this product
@@ -59,7 +59,7 @@ models:
           - dbt_utils.expression_is_true:
               expression: '>= 0'
 
-  - name: stg_order
+  - name: stg_orders
     description: Cleaned order header data. Each record represents a unique order placed by a customer.
     tests:
       - test_order_totals_match_lines
@@ -74,7 +74,7 @@ models:
         tests:
           - not_null
           - relationships:
-              to: ref('stg_customer')
+              to: ref('stg_customers')
               field: customer_id
       - name: currency
         description: Currency code for the order (e.g., USD)
@@ -93,7 +93,7 @@ models:
       - name: refunded_at
         description: Timestamp when the order was refunded, if applicable. Null if not refunded.
 
-  - name: stg_product
+  - name: stg_products
     description: Cleaned product data. Each record represents a unique product available for sale.
     columns:
       - name: product_id
@@ -133,6 +133,6 @@ models:
 tests:
   - name: test_order_totals_match_lines
     description: >
-      Ensures that the total_price in stg_order matches the sum of total_price
-      in stg_order_line for each order_id. This test helps identify any
+      Ensures that the total_price in stg_orders matches the sum of total_price
+      in stg_order_lines for each order_id. This test helps identify any
       discrepancies between order headers and their line items. 

@@ -1,0 +1,41 @@
+version: 2
+
+models:
+  - name: int_orders
+    description: >
+      Enriched order data with calculated metrics and joined product information.
+      This model standardizes order calculations and serves as the source of truth for order metrics.
+    columns:
+      - name: order_id
+        description: Unique identifier for each order
+        tests:
+          - unique
+          - not_null
+      - name: customer_id
+        description: Foreign key to the customer who placed the order
+        tests:
+          - not_null
+          - relationships:
+              to: ref('stg_customers')
+              field: customer_id
+      - name: created_at
+        description: Timestamp when the order was created
+        tests:
+          - not_null
+      - name: order_month
+        description: The month of the order, truncated to first day of month
+      - name: currency
+        description: Currency code for the order (e.g., USD)
+      - name: total_revenue
+        description: Total price of the order including all line items
+        tests:
+          - dbt_utils.expression_is_true:
+              expression: '>= 0'
+      - name: total_profit
+        description: Total profit calculated as (price - cost) * quantity for all line items
+      - name: basket_size
+        description: Total number of individual items in the order
+      - name: is_refunded
+        description: Boolean flag indicating if the order was refunded (true if refunded_at is not null)
+      - name: refunded_at
+        description: Timestamp when the order was refunded, if applicable. Null for non-refunded orders. 

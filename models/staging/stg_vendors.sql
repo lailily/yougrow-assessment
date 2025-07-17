@@ -6,7 +6,7 @@ renamed AS (
     SELECT
         id AS vendor_id,
         title AS vendor_name,
-        created_at
+        STRPTIME(created_at, '%m/%d/%Y %H:%M:%S') AS created_at
     FROM vendors
 )
 
